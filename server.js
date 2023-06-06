@@ -17,7 +17,7 @@ app.use(compression());
 // cors settings
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://shara-app.vercel.app", "https://shara.onrender.com"],
+    origin: ["http://localhost:3000", "https://shara-delta.vercel.app"],
     credentials: true,
   })
 );
