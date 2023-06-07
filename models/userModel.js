@@ -10,15 +10,12 @@ const userSchema = new Schema({
 	},
 	image: {
 		type: String,
-		require: true,
 	},
 	email: {
 		type: String,
-		require: true,
 	},
 	address: {
 		type: String,
-		require: true,
 	},
 	phone: {
 		type: String,
