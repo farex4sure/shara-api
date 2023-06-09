@@ -89,8 +89,8 @@ const createPin = async (req, res) => {
 };
 // // // // // // send funds to user
 const sendMoney = async (req, res) => {
-	const { id: userId, phone, amount, pin, token, narration } = req.body;
-	const amountToSend = parseInt(amount);
+	const { id: userId, phone, amount, token, narration } = req.body;
+    const amountToSend = parseInt(amount);
 	try {
 		let sender = await User.findOne({ userId });
 		let senderwlt = await Wallet.findOne({ userId });
@@ -110,30 +110,28 @@ const sendMoney = async (req, res) => {
 
 		if (!verify) {
 			throw Error('verification failed');
-		}
-		const match = pin === senderwlt.pin;
-		if (!match) {
-			throw Error('Incorrect pin');
-		}
-		if (senderwlt && recvwlt && match) {
+        }
+		if (senderwlt && recvwlt && verify) {
 			if (senderwlt.balance < amountToSend) {
-				throw Error('Insufficient balance');
-			} else if (senderwlt.balance >= amount) {
-				senderwlt.balance = senderwlt.balance - amountToSend;
-				senderTrans = new Transaction({
-					userId: sender.userId,
-					amountToSend,
-					balance: senderwlt.balance,
-					debit: receiver?.name,
-					date,
-					narration,
-				});
-				senderTrans = await senderTrans.save();
-				senderwlt = await senderwlt.save();
+				throw new Error('Insufficient balance');
 			}
+
+			senderwlt.balance -= amountToSend;
+			senderTrans = new Transaction({
+				userId: sender.userId,
+				amountToSend,
+				balance: senderwlt.balance,
+				debit: receiver?.name,
+				date,
+				narration,
+			});
+
+			senderTrans = await senderTrans.save();
+			senderwlt = await senderwlt.save();
 		}
-		if (senderwlt && receiver && match) {
-			recvwlt.balance = recvwlt.balance + amountToSend;
+
+		if (senderwlt && receiver && verify) {
+			recvwlt.balance += amountToSend;
 			recvTrans = new Transaction({
 				userId: receiver.userId,
 				amountToSend,
@@ -142,10 +140,12 @@ const sendMoney = async (req, res) => {
 				date,
 				narration,
 			});
+
 			recvwlt = await recvwlt.save();
 			recvTrans = await recvTrans.save();
 		}
-		res.status(200).json({ senderTrans, message: 'fund sent successfully' });
+
+		res.status(200).json({ message: 'Point sent successfully' });
 	} catch (error) {
 		res.status(404).json({ error: error.message });
 	}
