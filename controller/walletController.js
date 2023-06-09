@@ -26,14 +26,12 @@ const wallet = async (req, res) => {
 			throw Error('wallet does not  exist!!');
 		}
 		if (user && wallet) {
-			res
-				.status(200)
-				.json({
-					user,
-					wallet,
-					transaction,
-					message: 'wallet found successfully',
-				});
+			res.status(200).json({
+				user,
+				wallet,
+				transaction,
+				message: 'wallet found successfully',
+			});
 		}
 	} catch (error) {
 		res.status(404).json({ error: error.message });
@@ -97,7 +95,6 @@ const sendMoney = async (req, res) => {
 		let sender = await User.findOne({ userId });
 		let senderwlt = await Wallet.findOne({ userId });
 		let senderTrans = await Transaction.findOne({ userId });
-		let receiver = await User.findOne({ phone });
 		let recvwlt = await Wallet.findOne({ phone });
 		let recvTrans = await Transaction.findOne({ phone });
 		let date = new Date().getTime().toString();
@@ -105,7 +102,7 @@ const sendMoney = async (req, res) => {
 		if (!sender) {
 			throw Error("Sender's does not  exist!!");
 		}
-		if (!receiver) {
+		if (!recvwlt) {
 			throw Error("Receiver's does not exist!!");
 		}
 		// // verify the token
@@ -114,11 +111,11 @@ const sendMoney = async (req, res) => {
 		if (!verify) {
 			throw Error('verification failed');
 		}
-		const match = await bcrypt.compare(pin, senderwlt.pin);
+		const match = pin === senderwlt.pin;
 		if (!match) {
 			throw Error('Incorrect pin');
 		}
-		if (senderwlt && receiver && match) {
+		if (senderwlt && recvwlt && match) {
 			if (senderwlt.balance < amountToSend) {
 				throw Error('Insufficient balance');
 			} else if (senderwlt.balance >= amount) {
@@ -174,14 +171,12 @@ const receiveMoney = async (req, res) => {
 			receiver = await receiver.save();
 			credit = credit.save();
 			debit = debit.save();
-			res
-				.status(200)
-				.json({
-					credit,
-					debit,
-					receiver,
-					message: 'fund received successfully',
-				});
+			res.status(200).json({
+				credit,
+				debit,
+				receiver,
+				message: 'fund received successfully',
+			});
 		}
 	} catch (error) {
 		res.status(404).json({ error: error.message });
@@ -222,13 +217,11 @@ const sendOtp = async (req, res) => {
 		if (sendmessage) {
 			// user = await User.findOneAndCreate({userId: id},{secret:secret});
 			// user = await user.save()
-			res
-				.status(200)
-				.json({
-					OTP,
-					secret,
-					message: 'Password reset link sent successfully',
-				});
+			res.status(200).json({
+				OTP,
+				secret,
+				message: 'Password reset link sent successfully',
+			});
 		}
 		if (!sendmessage) {
 			throw Error(error);

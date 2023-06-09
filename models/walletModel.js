@@ -17,7 +17,7 @@ const walletSchema = new Schema(
 		},
 		pin: {
 			type: String,
-			default: 'user',
+			default: '1234',
 		},
 	},
 	{ timestamps: true }
