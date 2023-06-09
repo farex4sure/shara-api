@@ -91,8 +91,11 @@ const createPin = async (req, res) => {
 const sendMoney = async (req, res) => {
 	const { id, senderphone, receiver, amount, pin, token, narration } = req.body;
 	const amountToSend = parseInt(amount);
+	if (!mongoose.isValidObjectId(id)) {
+		return res.status(400).json({ error: 'Invalid vote credentials!' });
+	}
 	try {
-		let sender = await User.findById({ _id: id });
+		let sender = await User.findById(ObjectId(id));
 		let senderWallet = await Wallet.findOne({ phone: senderphone });
 		let receiverWallet = await Wallet.findOne({ phone: receiver });
 		if (!sender) {
