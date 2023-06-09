@@ -42,12 +42,11 @@ const signinUser = async (req, res) => {
     try {
         const user = await User.signup(name, phone, password)
         // create new wallet and transaction history for user
-         const wallet = await Wallet.create({ userId: user._id, balance : "0", phone });
-         const transaction = await Transaction.create({ userId: user._id });
+         const wallet = await Wallet.create({ userId: user._id, phone });
          // create a token
         const token = createToken(user._id)
 
-        res.status(200).json({user, token, wallet, transaction, message: "Account created successfully"})
+        res.status(200).json({user, token, wallet, transaction: [], message: "Account created successfully"})
     } catch (error) {
         res.status(404).json({error: error.message})
     }
