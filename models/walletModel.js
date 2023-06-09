@@ -13,12 +13,11 @@ const walletSchema = new Schema(
 		},
 		balance: {
 			type: Number,
-			require: true,
 			default: 500,
 		},
 		pin: {
 			type: String,
-			require: true,
+			default: 'user',
 		},
 	},
 	{ timestamps: true }
