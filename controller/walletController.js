@@ -133,7 +133,7 @@ const sendMoney = async (req, res) => {
 			userId: senderWallet.userId,
 			amount: amountToSend,
 			balance: newSenderBalance,
-			debit: `Sucessfully sent ${amount} to ${receiver}`,
+			debit: `Sucessfully sent ${amount} point to ${receiver}`,
 			narration,
 		});
 
@@ -148,7 +148,7 @@ const sendMoney = async (req, res) => {
 			userId: receiverWallet.userId,
 			amount: amountToSend,
 			balance: newReceiverBalance,
-			credit: `Sucessfully received ${amount} from ${senderphone}`,
+			credit: `Sucessfully received ${amount} point from ${senderphone}`,
 			narration,
 		});
 
