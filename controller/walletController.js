@@ -1,5 +1,7 @@
 const User = require('../models/userModel');
 const Wallet = require('../models/walletModel');
+const mongoose = require('mongoose');
+
 const Transaction = require('../models/transactionModel');
 const jwt = require('jsonwebtoken');
 const speakeasy = require('speakeasy');
@@ -95,7 +97,7 @@ const sendMoney = async (req, res) => {
 		return res.status(400).json({ error: 'Invalid vote credentials!' });
 	}
 	try {
-		let sender = await User.findById(ObjectId(id));
+		let sender = await User.findById({ _id: id });
 		let senderWallet = await Wallet.findOne({ phone: senderphone });
 		let receiverWallet = await Wallet.findOne({ phone: receiver });
 		if (!sender) {
