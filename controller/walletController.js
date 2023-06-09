@@ -89,63 +89,78 @@ const createPin = async (req, res) => {
 };
 // // // // // // send funds to user
 const sendMoney = async (req, res) => {
-	const { id: userId, phone, amount, token, narration } = req.body;
-    const amountToSend = parseInt(amount);
+	const { id, senderphone, receiver, amount, pin, token, narration } = req.body;
+	const amountToSend = parseInt(amount);
 	try {
-		let sender = await User.findOne({ userId });
-		let senderwlt = await Wallet.findOne({ userId });
-		let senderTrans = await Transaction.findOne({ userId });
-		let recvwlt = await Wallet.findOne({ phone });
-		let recvTrans = await Transaction.findOne({ phone });
-		let date = new Date().getTime().toString();
-
+		let sender = await User.findById({ _id: id });
+		let senderWallet = await Wallet.findOne({ phone: senderphone });
+		let receiverWallet = await Wallet.findOne({ phone: receiver });
 		if (!sender) {
 			throw Error("Sender's does not  exist!!");
 		}
-		if (!recvwlt) {
+		if (!receiverWallet) {
 			throw Error("Receiver's does not exist!!");
+		}
+		if (!senderWallet) {
+			throw Error("senderWallet's does not exist!!");
 		}
 		// // verify the token
 		const verify = jwt.verify(token, process.env.SECRET);
 
 		if (!verify) {
 			throw Error('verification failed');
-        }
-		if (senderwlt && recvwlt && verify) {
-			if (senderwlt.balance < amountToSend) {
+		}
+		if (senderWallet && receiverWallet && verify) {
+			if (senderWallet?.balance < amountToSend) {
 				throw new Error('Insufficient balance');
 			}
-
-			senderwlt.balance -= amountToSend;
-			senderTrans = new Transaction({
-				userId: sender.userId,
-				amountToSend,
-				balance: senderwlt.balance,
-				debit: receiver?.name,
-				date,
-				narration,
-			});
-
-			senderTrans = await senderTrans.save();
-			senderwlt = await senderwlt.save();
+			if (senderWallet?.pin !== pin) {
+				// console.log(senderWallet?.pin, pin, "ioeioioiokrnklrnklrnkrrnmrfnklr");
+				throw new Error('Incorrect transaction pin');
+			}
 		}
+		const newSenderBalance = senderWallet.balance - amountToSend;
+		const newSenderWallet = await Wallet.findOneAndUpdate(
+			{ phone: senderphone },
+			{ $set: { balance: newSenderBalance } },
+			{ new: true }
+		);
 
-		if (senderwlt && receiver && verify) {
-			recvwlt.balance += amountToSend;
-			recvTrans = new Transaction({
-				userId: receiver.userId,
-				amountToSend,
-				balance: recvwlt.balance,
-				credit: sender?.name,
-				date,
-				narration,
+		const senderTransaction = await Transaction.create({
+			userId: senderWallet.userId,
+			amount: amountToSend,
+			balance: newSenderBalance,
+			debit: `Sucessfully sent ${amount} to ${receiver}`,
+			narration,
+		});
+
+		const newReceiverBalance = receiverWallet.balance + amountToSend;
+		const newReceiverWallet = await Wallet.findOneAndUpdate(
+			{ phone: receiver },
+			{ $set: { balance: newReceiverBalance } },
+			{ new: true }
+		);
+
+		const receiverTransaction = await Transaction.create({
+			userId: receiverWallet.userId,
+			amount: amountToSend,
+			balance: newReceiverBalance,
+			credit: `Sucessfully received ${amount} from ${senderphone}`,
+			narration,
+		});
+
+		if (
+			newReceiverWallet &&
+			newSenderWallet &&
+			senderTransaction &&
+			receiverTransaction
+		) {
+			return res.status(200).json({
+				newSenderWallet,
+				senderTransaction,
+				message: 'Point sent successfully',
 			});
-
-			recvwlt = await recvwlt.save();
-			recvTrans = await recvTrans.save();
 		}
-
-		res.status(200).json({ message: 'Point sent successfully' });
 	} catch (error) {
 		res.status(404).json({ error: error.message });
 	}
@@ -159,14 +174,20 @@ const receiveMoney = async (req, res) => {
 		let receiver = await Wallet.findOne({ phone });
 
 		if (!wallet) {
-			throw Error('wallet does not  exist!!');
+			throw Error('Sender does not  exist!!');
 		}
 		if (!receiver) {
-			throw Error('Account Number does not exist!!');
+			throw Error('Receiver does not exist!!');
 		}
 		if (receiver) {
-			let credit = new Transaction({ phone, amount, debit: wallet.userId });
-			let debit = new Transaction({ userId, amount, credit: receiver.userId });
+			let credit = new Transaction(
+				{ phone, amount, debit: wallet.userId },
+				{ new: true }
+			);
+			let debit = new Transaction(
+				{ userId, amount, credit: receiver.userId },
+				{ new: true }
+			);
 			receiver.balance = receiver.balance + amount;
 			receiver = await receiver.save();
 			credit = credit.save();
