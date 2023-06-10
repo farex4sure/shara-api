@@ -94,12 +94,12 @@ const sendMoney = async (req, res) => {
 	const { senderphone, receiver, amount, pin, token, narration } = req.body;
 	const amountToSend = parseInt(amount);
 	try {
-		let sender = await User.findOne({ phone: senderphone });
+		// let sender = await User.findOne({ phone: senderphone });
 		let senderWallet = await Wallet.findOne({ phone: senderphone });
 		let receiverWallet = await Wallet.findOne({ phone: receiver });
-		if (!sender) {
-			throw Error("Sender's does not  exist!!");
-		}
+		// if (!sender) {
+		// 	throw Error("Sender's does not  exist!!");
+		// }
 		if (!receiverWallet) {
 			throw Error("Receiver's does not exist!!");
 		}
